@@ -18,9 +18,9 @@ namespace HidWizards.UCR.Core.Models
 
         /* Runtime */
         private Profile Profile { get; set; }
-        private List<short> InputCache { get; set; }
+        private List<(ulong sequence, short value)> InputCache { get; set; }
         private List<CallbackMultiplexer> Multiplexer { get; set; }
-        
+
 
         internal bool IsShadowMapping { get; set; }
         internal int ShadowDeviceNumber { get; set; }
@@ -60,7 +60,7 @@ namespace HidWizards.UCR.Core.Models
         {
             DeviceBindings = new List<DeviceBinding>();
             Plugins = new List<Plugin>();
-            
+
             IsShadowMapping = false;
             ShadowDeviceNumber = 0;
         }
@@ -90,8 +90,8 @@ namespace HidWizards.UCR.Core.Models
 
         internal void PrepareMapping(FilterState filterState)
         {
-            InputCache = new List<short>();
-            DeviceBindings.ForEach(_ => InputCache.Add(0));
+            InputCache = new List<(ulong, short)>();
+            DeviceBindings.ForEach(_ => InputCache.Add((0, 0)));
             Multiplexer = new List<CallbackMultiplexer>();
             for (var i = 0; i < DeviceBindings.Count; i++)
             {
@@ -126,14 +126,14 @@ namespace HidWizards.UCR.Core.Models
 
             return null;
         }
-        
-        public void Update(short value)
+
+        public void Update(ulong sequence, short value)
         {
             foreach (var plugin in Plugins)
             {
-                if (plugin.IsFiltered()) continue;
-                
-                plugin.Update(InputCache.ToArray());
+                if (plugin.IsFiltered()) return;
+
+                plugin.ScheduleUpdate(() => InputCache.Select(c => c.value).ToArray());
             }
         }
 

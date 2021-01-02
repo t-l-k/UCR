@@ -73,7 +73,7 @@ namespace HidWizards.UCR.Core.Managers
             Logger.Debug("SubscriptionState successfully activated");
 
             if (!DeactivateCurrentProfile()) Logger.Error("Failed to deactivate previous profile successfully");
-            
+
             FinalizeNewState(profile, state);
 
             return true;
@@ -102,7 +102,7 @@ namespace HidWizards.UCR.Core.Managers
         public bool DeactivateCurrentProfile()
         {
             if (SubscriptionState == null) return true;
-            
+
             var state = SubscriptionState;
             if (!state.IsActive) return true;
 
@@ -166,7 +166,7 @@ namespace HidWizards.UCR.Core.Managers
             }
 
             state.AddMappings(profile, state.OutputDeviceConfigurationSubscriptions);
-            
+
             return success;
         }
         private bool ConfigureFiltersForState(SubscriptionState state, Profile profile)
@@ -223,7 +223,7 @@ namespace HidWizards.UCR.Core.Managers
 
 
         #region Subscriber Actions
-        
+
         private bool SubscribeDeviceBindingInput(SubscriptionState state, InputSubscription deviceBindingSubscription)
         {
             if (!deviceBindingSubscription.DeviceBinding.IsBound) return true;
@@ -284,7 +284,7 @@ namespace HidWizards.UCR.Core.Managers
                 DeviceDescriptor = GetDeviceDescriptor(device),
                 SubscriptionDescriptor = GetSubscriptionDescriptor(deviceBindingSubscription.DeviceBindingSubscriptionGuid, state.StateGuid),
                 BindingDescriptor = GetBindingDescriptor(deviceBindingSubscription.DeviceBinding),
-                Callback = deviceBindingSubscription.DeviceBinding.Callback,
+                SequencedCallback = deviceBindingSubscription.DeviceBinding.Callback,
                 Block = deviceBindingSubscription.DeviceBinding.Block
             };
         }

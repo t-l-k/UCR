@@ -19,8 +19,7 @@ namespace HidWizards.UCR.Core.Models.Subscription
             deviceBinding.OutputSink = WriteOutput;
         }
 
-
-        private void WriteOutput(short value)
+        private void WriteOutput(ulong sequence, short value)
         {
             DeviceBinding.Profile.Context.IOController.SetOutputstate(SubscriptionsManager.GetOutputSubscriptionRequest(SubscriptionStateGuid, DeviceSubscription), SubscriptionsManager.GetBindingDescriptor(DeviceBinding), (int)value);
         }

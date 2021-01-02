@@ -65,13 +65,11 @@ namespace HidWizards.UCR.Core.Models.Binding
             }
         }
 
-
-        public delegate void ValueChanged(short value);
+        public delegate void ValueChanged(ulong sequence, short value);
         
-        private Action<short> _callback;
-
+        private Action<ulong, short> _callback;
         [XmlIgnore]
-        public Action<short> Callback
+        public Action<ulong, short> Callback
         {
             get => InputChanged;
             set
@@ -95,12 +93,24 @@ namespace HidWizards.UCR.Core.Models.Binding
             }
         }
 
+        private ulong _sequence;
+        [XmlIgnore]
+        public ulong Sequence
+        {
+            get => _sequence;
+            set
+            {
+                _sequence = value;
+                OnPropertyChanged();
+            }
+        }
+
         public DeviceBinding()
         {
             Guid = Guid.NewGuid();
         }
 
-        public DeviceBinding(Action<short> callback, Profile profile, DeviceIoType deviceIoType)
+        public DeviceBinding(Action<ulong, short> callback, Profile profile, DeviceIoType deviceIoType)
         {
             Callback = callback;
             Profile = profile;
@@ -184,7 +194,7 @@ namespace HidWizards.UCR.Core.Models.Binding
         public void WriteOutput(short value)
         {
             CurrentValue = value;
-            OutputSink?.Invoke(value);
+            OutputSink?.Invoke(_sequence, value);
         }
 
         public void EnterBindMode()
@@ -211,10 +221,10 @@ namespace HidWizards.UCR.Core.Models.Binding
             Profile.Context.BindingManager.EndBindModeHandler -= OnEndBindModeHandler;
         }
 
-        private void InputChanged(short value)
+        private void InputChanged(ulong sequence, short value)
         {
             CurrentValue = value;
-            _callback(value);
+            _callback(sequence, value);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

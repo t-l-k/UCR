@@ -5,6 +5,7 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 using HidWizards.UCR.Core.Attributes;
 using HidWizards.UCR.Core.Models.Binding;
@@ -18,7 +19,7 @@ namespace HidWizards.UCR.Core.Models
         /* Persistence */
         public List<DeviceBinding> Outputs { get; }
         public List<Filter> Filters { get; set; }
-        
+
         /* Runtime */
         internal Profile Profile { get; set; }
         private List<IODefinition> _inputCategories;
@@ -26,6 +27,8 @@ namespace HidWizards.UCR.Core.Models
         private List<PluginPropertyGroup> _pluginPropertyGroups;
         internal FilterState FilterState { get; set; }
         internal Mapping RuntimeMapping { get; set; }
+        private bool _isUpdating;
+        private Action _nextUpdate;
 
         #region Properties
 
@@ -100,7 +103,7 @@ namespace HidWizards.UCR.Core.Models
         }
 
         #region Life cycle
-        
+
         public virtual void OnActivate()
         {
 
@@ -122,6 +125,43 @@ namespace HidWizards.UCR.Core.Models
         public virtual void Update(params short[] values)
         {
 
+        }
+
+        public virtual void ScheduleUpdate(Func<short[]> valuesFactory)
+        {
+            // Prevent chaos writing by serialising updates
+            if (!_isUpdating)
+            {
+                // Immediately dispatch new task to update.
+                Task.Factory.StartNew(() => SerialisedUpdateTask(valuesFactory));
+            }
+            else
+            {
+                // Set the next update task.
+                _nextUpdate = () => SerialisedUpdateTask(valuesFactory);
+            }
+        }
+
+        public virtual void SerialisedUpdateTask(Func<short[]> valuesFactory)
+        {
+            if (_isUpdating) return;
+
+            _isUpdating = true;
+            try
+            {
+                Update(valuesFactory());
+            }
+            finally
+            {
+                _isUpdating = false;
+
+                if (_nextUpdate != null)
+                {
+                    var nextUpdate = _nextUpdate;
+                    _nextUpdate = null;
+                    Task.Factory.StartNew(nextUpdate);
+                }
+            }
         }
 
         public virtual void OnDeactivate()
@@ -156,8 +196,8 @@ namespace HidWizards.UCR.Core.Models
         private string GetFilterName(string filterName)
         {
             var filter = filterName.ToLower();
-            return RuntimeMapping.IsShadowMapping 
-                ? Filter.GetShadowName(filter, RuntimeMapping.ShadowDeviceNumber) 
+            return RuntimeMapping.IsShadowMapping
+                ? Filter.GetShadowName(filter, RuntimeMapping.ShadowDeviceNumber)
                 : filter;
         }
 
@@ -175,13 +215,13 @@ namespace HidWizards.UCR.Core.Models
                 ContextChanged();
                 return existingFilter;
             }
-            
+
             var filter = new Filter()
             {
                 Name = name,
                 Negative = negative
             };
-            
+
             Filters.Add(filter);
             ContextChanged();
             return filter;
@@ -250,7 +290,7 @@ namespace HidWizards.UCR.Core.Models
         }
 
         #endregion
-        
+
         #region Comparison
 
         public int CompareTo(Plugin other)
@@ -279,11 +319,11 @@ namespace HidWizards.UCR.Core.Models
 
             return pluginAttribute ?? new PluginAttribute("Invalid plugin");
         }
-        
+
         private List<IODefinition> GetIODefinitions(DeviceIoType deviceIoType)
         {
             var attributes = (PluginIoAttribute[])Attribute.GetCustomAttributes(GetType(), typeof(PluginIoAttribute));
-            
+
             return attributes.Where(a => a.DeviceIoType == deviceIoType).Select(a => new IODefinition()
             {
                 Category = a.DeviceBindingCategory,
@@ -318,12 +358,12 @@ namespace HidWizards.UCR.Core.Models
         public List<PluginPropertyGroup> GetGuiMatrix()
         {
             var result = new List<PluginPropertyGroup>();
-            
+
             var guiProperties = GetGuiProperties();
             guiProperties.Sort();
 
             var ungroupedProperties = guiProperties.FindAll(p => p.Group == null);
-            if (ungroupedProperties.Count > 0) { 
+            if (ungroupedProperties.Count > 0) {
                 result.Add(new PluginPropertyGroup()
                 {
                     Title = "Settings",
@@ -342,8 +382,8 @@ namespace HidWizards.UCR.Core.Models
                 {
                     Title = group.Name,
                     GroupName = group.Group,
-                    GroupType = GetPluginOutputGroups().Contains(group.Group) 
-                        ? PluginPropertyGroup.GroupTypes.Output 
+                    GroupType = GetPluginOutputGroups().Contains(group.Group)
+                        ? PluginPropertyGroup.GroupTypes.Output
                         : PluginPropertyGroup.GroupTypes.Settings,
                     PluginProperties = properties
                 });
