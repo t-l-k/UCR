@@ -21,7 +21,6 @@ namespace HidWizards.UCR.Core.Models
         private List<(ulong sequence, short value)> InputCache { get; set; }
         private List<CallbackMultiplexer> Multiplexer { get; set; }
 
-
         internal bool IsShadowMapping { get; set; }
         internal int ShadowDeviceNumber { get; set; }
         internal int PossibleShadowClones => CountPossibleShadowClones();
@@ -133,7 +132,16 @@ namespace HidWizards.UCR.Core.Models
             {
                 if (plugin.IsFiltered()) return;
 
-                plugin.ScheduleUpdate(() => InputCache.Select(c => c.value).ToArray());
+                plugin.ScheduleUpdate(() =>
+                {
+                    short[] values = new short[InputCache.Count];
+                    for (int i = 0; i < InputCache.Count; i++)
+                    {
+                        // Chaos read using for loop (no foreach as collection modified concurrently)
+                        values[i] = InputCache[i].value;
+                    }
+                    return values;
+                });
             }
         }
 
