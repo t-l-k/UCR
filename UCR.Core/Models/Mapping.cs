@@ -130,7 +130,7 @@ namespace HidWizards.UCR.Core.Models
         {
             foreach (var plugin in Plugins)
             {
-                if (plugin.IsFiltered()) return;
+                if (plugin.IsFiltered()) continue;
 
                 plugin.ScheduleUpdate(() =>
                 {
