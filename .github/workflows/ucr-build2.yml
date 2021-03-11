@@ -30,6 +30,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: true              # for IOWrapper
+          fetch-depth: 0                # necessary for gitversion?
 
       - uses: Amadevus/pwsh-script@v2
         id: restore-iowrapper
