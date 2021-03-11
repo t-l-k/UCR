@@ -11,9 +11,11 @@ name: UCR-Build
 on:
   workflow_dispatch:
   push:
-    branches: [ develop ]
+    branches:
+      - develop
+      - 'build/*'
   pull_request:
-    branches: [ $default-branch ]
+    branches: [ master ]
 
 jobs:
   # Set the job key. The key is displayed as the job name
