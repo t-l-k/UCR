@@ -10,15 +10,15 @@ name: UCR-Build
 # Run this workflow every time a new commit pushed to your repository
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - develop
-      - 'build/*'
+  # push:
+  #   branches:
+  #     - develop
+  #     - 'build/*'
   pull_request:
     branches:
       - master
-    branches-ignore:
-      - 'build/*'
+    # branches-ignore:
+    #   - 'build/*'
 
 jobs:
   # Set the job key. The key is displayed as the job name
