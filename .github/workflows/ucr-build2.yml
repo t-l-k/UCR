@@ -33,22 +33,22 @@ jobs:
           submodules: true              # for IOWrapper
           fetch-depth: 0                # necessary for gitversion?
 
-      - uses: Amadevus/pwsh-script@v2
-        id: restore-iowrapper
-        with:
-          script: nuget restore submodules\IOWrapper\IOWrapper.sln
+      - name: restore-iowrapper
+        shell: pwsh
+        run: |
+          nuget restore submodules\IOWrapper\IOWrapper.sln
 
-      - uses: Amadevus/pwsh-script@v2
-        id: initproject
-        with:
-          script: .\build.ps1 InitProject
+      - name: initproject
+        shell: pwsh
+        run: |
+          .\build.ps1 InitProject
 
-      - uses: Amadevus/pwsh-script@v2
-        id: gitversion
-        with:
-          script: gitversion /l console /output buildserver /updateAssemblyInfo
+      - name: gitversion
+        shell: pwsh
+        run: |
+          gitversion /l console /output buildserver /updateAssemblyInfo
 
-      - uses: Amadevus/pwsh-script@v2
-        id: build
-        with:
-          script: .\build.ps1 artifacts -configuration Release -codeanalysis true
+      - name: build-artifacts
+        shell: pwsh
+        run: |
+          .\build.ps1 artifacts -configuration Release -codeanalysis true
