@@ -144,7 +144,7 @@ class Build : NukeBuild
 
     Target Compile => _ => _
         .DependsOn(Restore)
-        .DependsOn(StartCodeAnalysis)
+        // .DependsOn(StartCodeAnalysis)
         .Executes(() =>
         {
             MSBuild(s => s
@@ -178,7 +178,7 @@ class Build : NukeBuild
 
     Target Artifacts => _ => _
         .DependsOn(CleanArtifacts)
-        .DependsOn(EndCodeAnalysis)
+        // .DependsOn(EndCodeAnalysis)
         .DependsOn(Test)
         .Executes(() =>
         {

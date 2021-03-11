@@ -15,7 +15,10 @@ on:
       - develop
       - 'build/*'
   pull_request:
-    branches: [ master ]
+    branches:
+      - master
+    branches-ignore:
+      - 'build/*'
 
 jobs:
   # Set the job key. The key is displayed as the job name
