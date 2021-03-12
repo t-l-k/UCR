@@ -1,0 +1,64 @@
+name: UCR-Build
+
+# starter workflows: https://github.com/actions/starter-workflows/tree/main/ci
+# dotnet starter: https://github.com/actions/starter-workflows/blob/main/ci/dotnet.yml
+# finding actions: https://docs.github.com/en/actions/learn-github-actions/finding-and-customizing-actions
+
+# https://github.com/marketplace/actions/github-action-to-setup-gitversion
+# "Gitversion already installed on Windows"
+
+# Run this workflow every time a new commit pushed to your repository
+on:
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - develop
+  #     - 'build/*'
+  pull_request:
+    branches:
+      - master
+    # branches-ignore:
+    #   - 'build/*'
+
+jobs:
+  # Set the job key. The key is displayed as the job name
+  # when a job name is not provided
+  ucr-build:
+    # Name the Job
+    name: UCR Build
+    # Set the type of machine to run on
+    # Use windows because UCR is .NET Framework & WPF based
+    runs-on: windows-latest
+
+    steps:
+      # Checks out a copy of your repository on the ubuntu-latest machine
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: true              # for IOWrapper
+          fetch-depth: 0                # necessary for gitversion?
+
+      - name: restore-iowrapper
+        shell: pwsh
+        run: |
+          nuget restore submodules\IOWrapper\IOWrapper.sln
+
+      - name: initproject
+        shell: pwsh
+        run: |
+          .\build.ps1 InitProject
+
+      - name: gitversion
+        shell: pwsh
+        run: |
+          gitversion /l console /output buildserver /updateAssemblyInfo
+
+      - name: build-artifacts
+        shell: pwsh
+        run: |
+          .\build.ps1 artifacts -configuration Release -codeanalysis true
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ucr
+          path: artifacts/*.zip
