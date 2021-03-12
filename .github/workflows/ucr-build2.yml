@@ -57,3 +57,8 @@ jobs:
         shell: pwsh
         run: |
           .\build.ps1 artifacts -configuration Release -codeanalysis true
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ucr
+          path: artifacts/*.zip
